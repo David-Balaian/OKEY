@@ -1,0 +1,76 @@
+.container{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    position: relative;
+}
+
+.roomsContainer{
+    width: 50%;
+    height: 100%;
+    background-color: black;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.tableContainer{
+    width: 50%;
+    height: 100%;
+    background: url("../images/background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.table{
+    position: relative;
+    width: 00px;
+    height: 0px;
+    overflow: hidden;
+}
+
+.userNameField{
+    background: #33383e;
+    color: #fff;
+    border:1px solid #919191;
+    padding: 10px 7px;
+    border-radius: 10px;
+    position: absolute;
+    transform: translateX(-50%);
+}
+
+.userInfo{
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: #120f11;
+    z-index: 10;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    padding: 10px 15px;
+}
+
+.img{
+    height: 100px;
+}
+.infoCont{
+    width: 100%;
+    height: 100%;
+}
+.text{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50%;
+    color: #fff;
+    font-size: 20px;
+}
+.Bbottom{
+    border-bottom: 1px solid #919191;
+}
