@@ -92,9 +92,21 @@ export default function (state=initialState, action) {
             }
         case "DROP":
             const { dominos } = state.user
-            const { fromIndex, toIndex } = action.payload
-            dominos[fromIndex].i = toIndex;
-            [dominos[fromIndex], dominos[toIndex]] = [dominos[toIndex], dominos[fromIndex]]
+            const { fromIndex, toIndex, type } = action.payload
+            console.log(`action.payload`, action.payload)
+            if(toIndex==="userSide"){
+                dominos[fromIndex] = null
+            }else{
+                if(type === "userSide"){
+                    dominos[toIndex] = state.selectedDomino.item;
+                    dominos[toIndex].i = toIndex 
+                    dominos[toIndex].type = undefined
+                }else{
+                    dominos[fromIndex].i = toIndex;
+                    [dominos[fromIndex], dominos[toIndex]] = [dominos[toIndex], dominos[fromIndex]]
+                }
+            }
+            console.log(`dominos`, dominos)
             return{
                 ...state,
                 user: {

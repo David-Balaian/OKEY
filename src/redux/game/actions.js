@@ -19,6 +19,13 @@ export const SELECT_DOMINO = (payload) => {
     }
 }
 
+export const SET_USER_DOMINO = (payload) => {
+    return {
+        type: "SET_USER_DOMINO",
+        payload,
+    }
+}
+
 export const UNSELECT_DOMINO = () => {
     return {
         type: "UNSELECT_DOMINO",
@@ -31,10 +38,10 @@ export const DROP_LOCATION = (i) => {
         payload: i,
     }
 }
-export const DROP = (fromIndex, toIndex) => {
+export const DROP = (fromIndex, toIndex, type) => {
     return {
         type: "DROP",
-        payload: {fromIndex, toIndex},
+        payload: {fromIndex, toIndex, type},
     }
 }
 
