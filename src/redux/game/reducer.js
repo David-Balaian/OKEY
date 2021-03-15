@@ -1,4 +1,4 @@
-import { getInitialBank } from "../../helpers/functions";
+import { getInitialBank, getSubArrays, subset } from "../../helpers/functions";
 import styles from "../../game/game.module.css"
 
 let initialState = {
@@ -32,7 +32,7 @@ export default function (state=initialState, action) {
             }
             randoms.forEach((item, i)=>{
                 let k = i+3 < 10 ? i+3 : i+9
-                user.dominos.splice(k, 1, bank[item])
+                user.dominos.splice(k, 1, {...bank[item], i: k})
             })
             randoms.forEach(item=>{
                 bank.splice(item, 1);
@@ -85,7 +85,7 @@ export default function (state=initialState, action) {
                 selectedDomino: null,
             }
         case "DROP_LOCATION":
-            console.log(`action.payload`, action.payload)
+            // console.log(`action.payload`, action.payload)
             return {
                 ...state,
                 dropLocation: action.payload,
@@ -93,7 +93,7 @@ export default function (state=initialState, action) {
         case "DROP":
             const { dominos } = state.user
             const { fromIndex, toIndex, type } = action.payload
-            console.log(`action.payload`, action.payload)
+            // console.log(`action.payload`, action.payload)
             if(toIndex==="userSide"){
                 dominos[fromIndex] = null
             }else{
@@ -106,7 +106,8 @@ export default function (state=initialState, action) {
                     [dominos[fromIndex], dominos[toIndex]] = [dominos[toIndex], dominos[fromIndex]]
                 }
             }
-            console.log(`dominos`, dominos)
+            // console.log(`dominos`, dominos)
+            // console.log(`getSubArrays(dominos)`, subset(dominos, 3))
             return{
                 ...state,
                 user: {
