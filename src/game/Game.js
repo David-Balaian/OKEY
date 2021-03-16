@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { subArrs, isSubArray } from '../helpers/functions'
-import { DROP, DROP_LOCATION, GET_DOMINOES, SELECT_DOMINO, UNSELECT_DOMINO } from '../redux/game/actions'
+import { DROP, DROP_LOCATION, GET_DOMINOES, OPEN_BANK_DOMINO, SELECT_DOMINO, UNSELECT_DOMINO } from '../redux/game/actions'
 import styles from "./game.module.css"
 import { useSpring, animated } from "react-spring"
 
 export default function Game() {
     const dispatch = useDispatch()
     const game = useSelector(s => s.game)
-    const { oponent, user } = game
+    const { oponent, user, bank, banksOpenedDomino } = game
     const [oponentsDomino, setOponentsDomino] = useState(null)
     const [userssDomino, setUserssDomino] = useState(null)
     const selectedDomino = useSelector(s => s.game.selectedDomino)
@@ -16,6 +16,7 @@ export default function Game() {
     const dominosContainerRef = useRef()
     const gameTableRef = useRef()
     const [combinations, setCombinations] = useState([])
+    const specialLocations = ["userSide", "banksOpenedDomino"]
 
     useEffect(() => {
         dispatch(GET_DOMINOES())
@@ -29,22 +30,20 @@ export default function Game() {
         })
         let sequencess = []
         subs.forEach(item => {
-            if (item.every((e, i, arr) => { if (!arr[i + 1]) return true; return e.value + 1 === arr[i + 1].value })) {
+            if (item.every((e, i, arr) => { if (!arr[i + 1]) return true; return (e.value + 1 === arr[i + 1].value) && (e.color===arr[i+1].color) })) {
                 sequencess.push(item)
             }
         })
         let ids = sequencess.map(item => item.map(e => JSON.stringify(e)))
         let filteredIds = ids.filter((item, i, arr) => { return !arr.some((e, j) => { if (i === j) { return false } return isSubArray(e, item) }) })
-        console.log(`sequencess`, ids)
-        console.log(`filtered`, filteredIds)
         let combinations = filteredIds.map(item => item.map(e => JSON.parse(e)))
         setCombinations(combinations.map(item => ({ start: Math.min(...item.map(e => e.i)), end: Math.max(...item.map(e => e.i) )})))
 
     }, [user])
 
-    // useEffect(()=>{
-    //     console.log(`setCombinations`, combinations)
-    // },[combinations])
+    useEffect(()=>{
+        console.log(`game`, game)
+    },[game])
 
     useEffect(() => {
         if (selectedDomino) {
@@ -76,7 +75,7 @@ export default function Game() {
                 dispatch(DROP(selectedDomino.i, dropLocation, selectedDomino.type))
                 selectedDomino.ref.current.style.top = dropLocation >= 13 ? "50%" : "0px";
                 selectedDomino.ref.current.style.left = `calc((100% / 13) * ${dropLocation >= 13 ? dropLocation - 13 : dropLocation})`
-            } else if (dropLocation === "userSide") {
+            } else if (dropLocation==="userSide") {
                 setUserssDomino(selectedDomino.item)
                 dispatch(DROP(selectedDomino.i, dropLocation, selectedDomino.type))
                 // selectedDomino.ref.current.style.display = "none"
@@ -87,8 +86,19 @@ export default function Game() {
             }
             dispatch(DROP_LOCATION(null))
             dispatch(UNSELECT_DOMINO())
-            if (selectedDomino.type === "userSide") {
-                setUserssDomino(null)
+            if (specialLocations.includes(selectedDomino.type)) {
+                switch (selectedDomino.type) {
+                    case "userSide":
+                        setUserssDomino(null)
+                        break;
+                    case "banksOpenedDomino":
+                        console.log(`OPEN_BANK_DOMINO`)
+                        dispatch(OPEN_BANK_DOMINO())
+                        break;
+                    default:
+                        break;
+                }
+                
             }
         }
     }
@@ -96,7 +106,7 @@ export default function Game() {
         if (!selectedDomino) return
         // let rectDomino = selectedDomino.ref.current.getBoundingClientRect()
         let rect = dominosContainerRef.current.getBoundingClientRect()
-        if (selectedDomino.type === "userSide") {
+        if (specialLocations.includes(selectedDomino.type)) {
             rect = gameTableRef.current.getBoundingClientRect()
 
         }
@@ -115,6 +125,8 @@ export default function Game() {
     return (
         <div className={styles.container} onMouseUp={handleMouseUp} onMouseMove={handleDrag} >
             <div className={styles.gameTable} ref={gameTableRef} >
+                <div className={`${styles.bank} ${styles.dominoContainerBorder}`}> {bank.length} </div>
+                {banksOpenedDomino ? <Domino type="banksOpenedDomino" item={banksOpenedDomino} /> : <div className={`${styles.openedFromBank} ${styles.dominoContainerBorder}`}> </div>}
                 <div className={styles.nameCont} style={{ top: "0px" }} ><span className={styles.userName} > {oponent.name} </span> <span className={styles.score} > Score: {oponent.score} </span></div>
                 <div className={styles.nameCont} style={{ bottom: "41%" }} > <span className={styles.userName} >{user.name} </span> <span className={styles.score} > Score: {user.score} </span></div>
                 <div className={styles.dominoContainer} style={{ top: "10px", left: "20px" }} > {oponentsDomino && <Domino item={oponentsDomino} />} </div>
@@ -168,7 +180,12 @@ function Domino({ item, i, type }) {
     return (
         <animated.div
             ref={dominoRef}
-            style={type === "userSide" ? { ...props, position: "absolute", bottom: "41%", right: "20px", height: "20%" } : { ...props, position: "absolute", top: i >= 13 ? "50%" : "0px", left: `calc((100% / 13) * ${i >= 13 ? i - 13 : i})`, }}
+            style={
+                type === "userSide" ? 
+                { ...props, position: "absolute", bottom: "41%", right: "20px", height: "20%" } : 
+                type === "banksOpenedDomino" ?
+                { ...props, position: "absolute", top: "20%", left: "52%", height: "20%" } :
+                { ...props, position: "absolute", top: i >= 13 ? "50%" : "0px", left: `calc((100% / 13) * ${i >= 13 ? i - 13 : i})`, }}
             className={styles.domino}
             onMouseDown={() => dispatch(SELECT_DOMINO({ item, i: i ? i : 12, ref: dominoRef, type, styleSetter: setter }))}
         >

@@ -26,6 +26,12 @@ export const SET_USER_DOMINO = (payload) => {
     }
 }
 
+export const OPEN_BANK_DOMINO = () => {
+    return {
+        type: "OPEN_BANK_DOMINO",
+    }
+}
+
 export const UNSELECT_DOMINO = () => {
     return {
         type: "UNSELECT_DOMINO",

@@ -34,9 +34,30 @@
     flex-wrap: wrap;
 }
 
+.bank{
+    position: absolute;
+    top: 20%;
+    left: 40%;
+    background-color: #d0b888;
+    border-radius: 10px;
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    text-shadow: 0px 0px 4px black;
+    font-family: cursive;
+    color: #000000;
+}
+
+.openedFromBank{
+    top: 20%;
+    left: 52%;
+}
+
 .dominoContainerBorder{
-    background-color: transparent;
-    /* border: 2px solid #3a4a58; */
+    border: 2px solid #3a4a58;
     width: calc(100% / 13);
     box-sizing: border-box;
     height: 20%;

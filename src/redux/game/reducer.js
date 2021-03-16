@@ -1,4 +1,4 @@
-import { getInitialBank, getSubArrays, subset } from "../../helpers/functions";
+import { getInitialBank } from "../../helpers/functions";
 import styles from "../../game/game.module.css"
 
 let initialState = {
@@ -17,6 +17,8 @@ let initialState = {
         bank: getInitialBank(),
         selectedDomino: null,
         dropLocation:null,
+        banksOpenedDomino: null,
+        specialLocations: ["userSide", "banksOpenedDomino"]
 }
 
 
@@ -52,12 +54,26 @@ export default function (state=initialState, action) {
                 bank.splice(item, 1);
             })
             /////////////////////
+            ////////random domino from bank//////////
+
+            let ind = Math.floor(Math.random() * (bank.length - 1))
+            let banksOpenedDomino = bank[ind]
+            bank.splice(ind, 1)
+
+
+
+            ////////////////////////////////////////
             return {
                 ...state,
                 user: {
                     ...state.user,
                     dominos: user.dominos,
-                }
+                },
+                oponent:{
+                    ...state.oponent,
+                    dominos: oponent.dominos
+                },
+                banksOpenedDomino: banksOpenedDomino
             }
         case "ENTER_GAME":
             return {
@@ -71,7 +87,8 @@ export default function (state=initialState, action) {
                     name: action.payload.user.name,
                     score: 0,
                     dominos: new Array(26).fill(null)
-                }
+                },
+                banksOpenedDomino: null
             }
         case "SELECT_DOMINO":
             return {
@@ -94,10 +111,10 @@ export default function (state=initialState, action) {
             const { dominos } = state.user
             const { fromIndex, toIndex, type } = action.payload
             // console.log(`action.payload`, action.payload)
-            if(toIndex==="userSide"){
+            if(state.specialLocations.includes(toIndex)){
                 dominos[fromIndex] = null
             }else{
-                if(type === "userSide"){
+                if(state.specialLocations.includes(type)){
                     dominos[toIndex] = state.selectedDomino.item;
                     dominos[toIndex].i = toIndex 
                     dominos[toIndex].type = undefined
@@ -115,6 +132,14 @@ export default function (state=initialState, action) {
                     dominos: dominos,
                 }
             }
+            case "OPEN_BANK_DOMINO":
+                ind = Math.floor(Math.random() * (state.bank.length - 1))
+                banksOpenedDomino = state.bank[ind]
+                bank.splice(ind, 1)
+                return{
+                    ...state,
+                    banksOpenedDomino: banksOpenedDomino
+                }
         default:
             return state
     }
