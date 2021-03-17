@@ -10,8 +10,8 @@ export function getInitialBank() {
         }
         bank.push(...arr)
         arr = []
-        for (let i = 14; i < 28; i++) {
-            arr.push({ color: color, value: i-13, id: `${i-13}_${color}`, i:i })
+        for (let i = 14; i < 27; i++) {
+            arr.push({ color: color, value: i-13, id: `${i}_${color}`, i:i-13 })
         }
         bank.push(...arr)
         arr = []

@@ -12,18 +12,32 @@ export default function Game() {
     const [oponentsDomino, setOponentsDomino] = useState(null)
     const [userssDomino, setUserssDomino] = useState(null)
     const selectedDomino = useSelector(s => s.game.selectedDomino)
-    const dropLocation = useSelector(s => s.game.dropLocation)
+    const dropLocation = useRef({from: null, to: null})
     const dominosContainerRef = useRef()
     const gameTableRef = useRef()
     const [combinations, setCombinations] = useState([])
-    const specialLocations = ["userSide", "banksOpenedDomino"]
+    const specialLocations = useSelector(s=>s.game.specialLocations)
+    const openedFromBankRef = useRef()
+    const usersDominoRef = useRef()
 
     useEffect(() => {
         dispatch(GET_DOMINOES())
     }, [])
 
-
     useEffect(() => {
+        console.log(`user.dominos`, user.dominos)
+        console.log(`bank`, bank)
+        console.log(`oponent.dominos`, oponent.dominos)
+        let b = bank
+        let count = 0
+        b.forEach((i, parent)=>{
+            let index = user.dominos.findIndex((k, slave)=>k&&i.id===k.id)
+            if(index!==-1){
+                console.log(`b[index]`, b[index])
+                count ++ 
+            }
+        })
+console.log(`count`, count)
         let subs = subArrs(user.dominos, 3)
         subs.forEach(item => {
             item.sort((a, b) => a.value - b.value)
@@ -38,80 +52,65 @@ export default function Game() {
         let filteredIds = ids.filter((item, i, arr) => { return !arr.some((e, j) => { if (i === j) { return false } return isSubArray(e, item) }) })
         let combinations = filteredIds.map(item => item.map(e => JSON.parse(e)))
         setCombinations(combinations.map(item => ({ start: Math.min(...item.map(e => e.i)), end: Math.max(...item.map(e => e.i) )})))
-
     }, [user])
-
-    useEffect(()=>{
-        console.log(`game`, game)
-    },[game])
 
     useEffect(() => {
         if (selectedDomino) {
-            // console.log(`selectedDomino`, selectedDomino.ref)
             selectedDomino.ref.current.className = styles.selectedDomino
+            let indexSpecial = specialLocations.findIndex(item=>item.name === selectedDomino.i)
+            if(indexSpecial !== -1){
+                selectedDomino.ref.current.style.width="100%";
+                selectedDomino.ref.current.style.height="100%";
+            }
+            dropLocation.current.from = selectedDomino.i 
             let index = selectedDomino.i > 13 ? selectedDomino.i - 13 : selectedDomino.i;
-
-            selectedDomino.styleSetter(
-                {
-                    boxShadow: "0px 0px 10px 10px rgb(0 0 0 / 50%)",
-                    transform: "scale(1.1)",
-                    top: `${selectedDomino.i > 13 ? parseInt(selectedDomino.ref.current.clientHeight) : 0}px`,
-                    left: `${index * parseInt(selectedDomino.ref.current.clientWidth)}px`,
-                })
+            selectedDomino.styleSetter({
+                boxShadow: "0px 0px 10px 10px rgb(0 0 0 / 50%)",
+                transform: "scale(1.1)",
+                // top: `${selectedDomino.i > 13 ? parseInt(selectedDomino.ref.current.clientHeight) : 0}px`,
+                // left: indexSpecial !== -1 ? `${specialLocations[indexSpecial].left}` : `${index * parseInt(selectedDomino.ref.current.clientWidth)}px`,
+            })
         }
     }, [selectedDomino])
 
     function handleMouseUp() {
         if (selectedDomino) {
             selectedDomino.ref.current.className = styles.domino;
-            selectedDomino.styleSetter(
-                {
-                    boxShadow: "0px 0px 0px 0px rgb(0 0 0 / 0%)",
-                    transform: "scale(1)",
-                })
-            // console.log(`selectedDomino`, selectedDomino.type)
+            let indexSpecial = specialLocations.find(item=>item.name === dropLocation.current.from)
 
-            if (typeof (dropLocation) === "number") {
-                dispatch(DROP(selectedDomino.i, dropLocation, selectedDomino.type))
-                selectedDomino.ref.current.style.top = dropLocation >= 13 ? "50%" : "0px";
-                selectedDomino.ref.current.style.left = `calc((100% / 13) * ${dropLocation >= 13 ? dropLocation - 13 : dropLocation})`
-            } else if (dropLocation==="userSide") {
-                setUserssDomino(selectedDomino.item)
-                dispatch(DROP(selectedDomino.i, dropLocation, selectedDomino.type))
-                // selectedDomino.ref.current.style.display = "none"
-                // selectedDomino.ref.current.style.right = "20px"
-            } else {
-                selectedDomino.ref.current.style.top = selectedDomino.i >= 13 ? "50%" : "0px";
-                selectedDomino.ref.current.style.left = `calc((100% / 13) * ${selectedDomino.i >= 13 ? selectedDomino.i - 13 : selectedDomino.i})`
-            }
-            dispatch(DROP_LOCATION(null))
+            // let location = dropLocation.current.to ?? dropLocation.current.from
+            // let style = typeof location === "number" ? {top: location >= 13 ? "50%" : "0px", left: `calc((100% / 13) * ${location >= 13 ? location - 13 : location})`} : {}
+
+            selectedDomino.styleSetter({
+                boxShadow: "0px 0px 0px 0px rgb(0 0 0 / 0%)",
+                transform: "scale(1)",
+                // ...style,
+            })
+            dispatch(DROP(dropLocation.current.from, dropLocation.current.to ?? dropLocation.current.from, selectedDomino, indexSpecial))
+            dropLocation.current = {from: null, to: null}
             dispatch(UNSELECT_DOMINO())
-            if (specialLocations.includes(selectedDomino.type)) {
-                switch (selectedDomino.type) {
-                    case "userSide":
-                        setUserssDomino(null)
-                        break;
-                    case "banksOpenedDomino":
-                        console.log(`OPEN_BANK_DOMINO`)
-                        dispatch(OPEN_BANK_DOMINO())
-                        break;
-                    default:
-                        break;
-                }
-                
-            }
         }
     }
     function handleDrag(e) {
         if (!selectedDomino) return
         // let rectDomino = selectedDomino.ref.current.getBoundingClientRect()
+        let indexSpecial = specialLocations.find(item=>item.name === dropLocation.current.from)
         let rect = dominosContainerRef.current.getBoundingClientRect()
-        if (specialLocations.includes(selectedDomino.type)) {
-            rect = gameTableRef.current.getBoundingClientRect()
-
+        if (indexSpecial) {
+            switch (indexSpecial.name) {
+                case "banksOpenedDomino":
+                    rect = openedFromBankRef.current.getBoundingClientRect()
+                    break;
+                case "usersSide":
+                    rect = usersDominoRef.current.getBoundingClientRect()
+                    break;
+                
+                default:
+                    break;
+            }
+            
         }
-        selectedDomino.styleSetter(
-            {
+        selectedDomino.styleSetter({
                 top: `${e.clientY - rect.top - (selectedDomino.ref.current.clientHeight / 2)}px`,
                 left: `${e.clientX - rect.left - (selectedDomino.ref.current.clientWidth / 2)}px`,
             })
@@ -126,11 +125,11 @@ export default function Game() {
         <div className={styles.container} onMouseUp={handleMouseUp} onMouseMove={handleDrag} >
             <div className={styles.gameTable} ref={gameTableRef} >
                 <div className={`${styles.bank} ${styles.dominoContainerBorder}`}> {bank.length} </div>
-                {banksOpenedDomino ? <Domino type="banksOpenedDomino" item={banksOpenedDomino} /> : <div className={`${styles.openedFromBank} ${styles.dominoContainerBorder}`}> </div>}
+                <div className={`${styles.openedFromBank} ${styles.dominoContainerBorder}`} ref={openedFromBankRef} >{banksOpenedDomino && <Domino i="banksOpenedDomino" item={banksOpenedDomino} /> } </div>
                 <div className={styles.nameCont} style={{ top: "0px" }} ><span className={styles.userName} > {oponent.name} </span> <span className={styles.score} > Score: {oponent.score} </span></div>
                 <div className={styles.nameCont} style={{ bottom: "41%" }} > <span className={styles.userName} >{user.name} </span> <span className={styles.score} > Score: {user.score} </span></div>
                 <div className={styles.dominoContainer} style={{ top: "10px", left: "20px" }} > {oponentsDomino && <Domino item={oponentsDomino} />} </div>
-                {userssDomino ? <Domino type="userSide" item={userssDomino} /> : <div className={styles.dominoContainer} style={{ zIndex: selectedDomino ? 1001 : "unset", bottom: "41%", right: "20px" }} onMouseOver={() => { if (!selectedDomino) return; dispatch(DROP_LOCATION("userSide")) }} onMouseLeave={() => { if (!selectedDomino) return; dispatch(DROP_LOCATION(null)) }}  >  </div>}
+                <div className={styles.dominoContainer} style={{ zIndex: selectedDomino ? 1001 : "unset", top: "39%", left: "89%" }} ref={usersDominoRef} onMouseOver={() => { if (!selectedDomino && !userssDomino) return; dropLocation.current.to = "userSide" }} onMouseLeave={() => { if (!selectedDomino && !userssDomino) return; dropLocation.current.to = null }}> {userssDomino && <Domino i="userSide" item={userssDomino} /> } </div>
                 <div className={`area ${styles.dominosContainer}`} ref={dominosContainerRef} >
                     {combinations.map(item=>{
                         return <>
@@ -158,7 +157,7 @@ export default function Game() {
                                 <Domino item={item} i={i} />
                             </div>
                         } else {
-                            return <div key={i} style={selectedDomino ? { zIndex: 1001 } : {}} onMouseOver={() => { if (!selectedDomino) return; dispatch(DROP_LOCATION(i)) }} onMouseLeave={() => { if (!selectedDomino) return; dispatch(DROP_LOCATION(null)) }} className={styles.singleDominoContiner} />
+                            return <div key={i} style={selectedDomino ? { zIndex: 1001 } : {}} onMouseOver={() => { if (!selectedDomino) return; dropLocation.current.to = i }} onMouseLeave={() => { if (!selectedDomino) return; dropLocation.current.to = null }} className={styles.singleDominoContiner} />
                         }
                         // return <> {!item ? 
                         //     <Domino key={item} item={item} i={i} />
@@ -171,23 +170,27 @@ export default function Game() {
     )
 }
 
-function Domino({ item, i, type }) {
+function Domino({ item, i }) {
     const dispatch = useDispatch()
     const dominoRef = useRef()
     const [props, setter] = useSpring(() => ({ boxShadow: "0px 0px 0px 0px rgb(0 0 0 / 0%)", transform: "scale(1)", config: { mass: 1, tension: 500, friction: 10 } }))
 
-
+    function mouseDown(){
+        dispatch(SELECT_DOMINO({ item, i: i, ref: dominoRef, styleSetter: setter }))
+    }
     return (
         <animated.div
             ref={dominoRef}
             style={
-                type === "userSide" ? 
-                { ...props, position: "absolute", bottom: "41%", right: "20px", height: "20%" } : 
-                type === "banksOpenedDomino" ?
-                { ...props, position: "absolute", top: "20%", left: "52%", height: "20%" } :
-                { ...props, position: "absolute", top: i >= 13 ? "50%" : "0px", left: `calc((100% / 13) * ${i >= 13 ? i - 13 : i})`, }}
+                // i === "userSide" ? 
+                // { ...props, position: "absolute", bottom: "41%", right: "20px", height: "20%" } : 
+                // i === "banksOpenedDomino" ?
+                // { ...props, position: "absolute", top: "20%", left: "52%", height: "20%" } :
+                { ...props
+                    // , position: "absolute", top: i >= 13 ? "50%" : "0px", left: `calc((100% / 13) * ${i >= 13 ? i - 13 : i})`, 
+                }}
             className={styles.domino}
-            onMouseDown={() => dispatch(SELECT_DOMINO({ item, i: i ? i : 12, ref: dominoRef, type, styleSetter: setter }))}
+            onMouseDown={mouseDown}
         >
             <div className={styles.Dnumber} style={{ color: item.color }} > {item.value} </div>
             <div className={styles.DStyle}>

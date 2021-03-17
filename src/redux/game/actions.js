@@ -44,10 +44,10 @@ export const DROP_LOCATION = (i) => {
         payload: i,
     }
 }
-export const DROP = (fromIndex, toIndex, type) => {
+export const DROP = (fromIndex, toIndex, domino, indexSpecial) => {
     return {
         type: "DROP",
-        payload: {fromIndex, toIndex, type},
+        payload: {fromIndex, toIndex, domino, indexSpecial},
     }
 }
 

@@ -18,46 +18,48 @@ let initialState = {
         selectedDomino: null,
         dropLocation:null,
         banksOpenedDomino: null,
-        specialLocations: ["userSide", "banksOpenedDomino"]
+        specialLocations: [{name: "userSide", left: `89%`, top:"39%"}, {name:"banksOpenedDomino", top:"20%", left:"52%" }]
 }
 
-
 export default function (state=initialState, action) {
+    let { bank, banksOpenedDomino } = state
+    const { user, oponent } = state
+    const { dominos } = state.user
     switch (action.type) {
         case "GET_DOMINOES":
-            const { bank, user, oponent } = state
             ///user dominos////////
-            let randoms = []
-            while(randoms.length < 14){
+            let randomsUsers = []
+            while(randomsUsers.length < 14){
                 let index = Math.floor(Math.random() * (bank.length - 1));
-                randoms.indexOf(index) === -1 && randoms.push(index);
+                randomsUsers.indexOf(index) === -1 && randomsUsers.push(index);
             }
-            randoms.forEach((item, i)=>{
+            randomsUsers.forEach((item, i)=>{
                 let k = i+3 < 10 ? i+3 : i+9
                 user.dominos.splice(k, 1, {...bank[item], i: k})
             })
-            randoms.forEach(item=>{
+            console.log(`randomUsers`, randomsUsers.map(item=>bank[item]))
+            randomsUsers.forEach(item=>{
                 bank.splice(item, 1);
             })
             /////////////////////
             ///oponent dominos///
-            randoms = []
-            while(randoms.length < 14){
+            let randomsOponent = []
+            while(randomsOponent.length < 14){
                 let index = Math.floor(Math.random() * (bank.length - 1));
-                randoms.indexOf(index) === -1 && randoms.push(index);
+                randomsOponent.indexOf(index) === -1 && randomsOponent.push(index);
             }
-            randoms.forEach((item, i)=>{
+            randomsOponent.forEach((item, i)=>{
                 let k = i+3 < 10 ? i+3 : i+9
-                oponent.dominos.splice(k, 1, bank[item])
+                oponent.dominos.splice(k, 1, {...bank[item], i: k})
             })
-            randoms.forEach(item=>{
+            randomsOponent.forEach(item=>{
                 bank.splice(item, 1);
             })
             /////////////////////
             ////////random domino from bank//////////
 
             let ind = Math.floor(Math.random() * (bank.length - 1))
-            let banksOpenedDomino = bank[ind]
+            banksOpenedDomino = bank[ind]
             bank.splice(ind, 1)
 
 
@@ -73,22 +75,8 @@ export default function (state=initialState, action) {
                     ...state.oponent,
                     dominos: oponent.dominos
                 },
+                bank,
                 banksOpenedDomino: banksOpenedDomino
-            }
-        case "ENTER_GAME":
-            return {
-                ...state,
-                oponent: {
-                    name: action.payload.room.currentRegistereds[0],
-                    score: 0,
-                    dominos: new Array(26).fill(null)
-                },
-                user:{
-                    name: action.payload.user.name,
-                    score: 0,
-                    dominos: new Array(26).fill(null)
-                },
-                banksOpenedDomino: null
             }
         case "SELECT_DOMINO":
             return {
@@ -96,7 +84,7 @@ export default function (state=initialState, action) {
                 selectedDomino: action.payload,
             }
         case "UNSELECT_DOMINO":
-            state.selectedDomino.ref = styles.domino
+            // state.selectedDomino.ref = styles.domino
             return{
                 ...state,
                 selectedDomino: null,
@@ -108,21 +96,42 @@ export default function (state=initialState, action) {
                 dropLocation: action.payload,
             }
         case "DROP":
-            const { dominos } = state.user
-            const { fromIndex, toIndex, type } = action.payload
-            // console.log(`action.payload`, action.payload)
-            if(state.specialLocations.includes(toIndex)){
-                dominos[fromIndex] = null
-            }else{
-                if(state.specialLocations.includes(type)){
-                    dominos[toIndex] = state.selectedDomino.item;
-                    dominos[toIndex].i = toIndex 
-                    dominos[toIndex].type = undefined
-                }else{
-                    dominos[fromIndex].i = toIndex;
-                    [dominos[fromIndex], dominos[toIndex]] = [dominos[toIndex], dominos[fromIndex]]
+            const { fromIndex, toIndex, domino, indexSpecial } = action.payload
+            console.log(`action.payload`, action.payload)
+            if((fromIndex===toIndex) || (typeof fromIndex !== "number" && typeof toIndex !== "number")){
+                return {...state}
+            }else if(indexSpecial){
+                switch (indexSpecial.name) {
+                    case "banksOpenedDomino":
+                        dominos[toIndex] = state.banksOpenedDomino;
+                        let ind = Math.floor(Math.random() * (bank.length - 1))
+                        banksOpenedDomino = bank[ind]
+                        // console.log(`banksOpenedDomino`, banksOpenedDomino)
+                        bank.splice(ind, 1)
+
+                        break;
+                    case "usersSide":
+                        rect = usersDominoRef.current.getBoundingClientRect()
+                        break;
+                    
+                    default:
+                        break;
                 }
+            }else if(typeof fromIndex === "number" && typeof toIndex === "number"){
+                dominos[fromIndex].i = toIndex;
+                [dominos[fromIndex], dominos[toIndex]] = [dominos[toIndex], dominos[fromIndex]]
             }
+            // if(state.specialLocations.includes(toIndex)){
+            //     dominos[fromIndex] = null
+            // }else{
+            //     if(state.specialLocations.includes(type)){
+            //         dominos[toIndex] = state.selectedDomino.item;
+            //         dominos[toIndex].i = toIndex 
+            //         dominos[toIndex].type = undefined
+            //     }else{
+                    
+            //     }
+            // }
             // console.log(`dominos`, dominos)
             // console.log(`getSubArrays(dominos)`, subset(dominos, 3))
             return{
@@ -130,16 +139,11 @@ export default function (state=initialState, action) {
                 user: {
                     ...state.user,
                     dominos: dominos,
-                }
+                },
+                bank,
+                banksOpenedDomino,
             }
-            case "OPEN_BANK_DOMINO":
-                ind = Math.floor(Math.random() * (state.bank.length - 1))
-                banksOpenedDomino = state.bank[ind]
-                bank.splice(ind, 1)
-                return{
-                    ...state,
-                    banksOpenedDomino: banksOpenedDomino
-                }
+            
         default:
             return state
     }
