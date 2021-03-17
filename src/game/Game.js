@@ -19,15 +19,33 @@ export default function Game() {
     const specialLocations = useSelector(s=>s.game.specialLocations)
     const openedFromBankRef = useRef()
     const usersDominoRef = useRef()
+    const dominoStyle =  {
+        width: "100%",
+        height: "100%",
+        backgroundColor: "#d0b888",
+        borderRadius: "10px",
+        userSelect: "none",
+        cursor: "pointer",
+    }
+    const selectedDominoStyle = {
+        backgroundColor: "#d0b888",
+        borderRadius: "10px",
+        userSelect: "none",
+        boxShadow: "0px 0px 10px 18px rgb(0 0 0 / 50%)",
+        transform: "scale(1.1)",
+        position: "absolute",
+        width: "calc(100% / 13)",
+        height: "50%",
+    }
 
     useEffect(() => {
         dispatch(GET_DOMINOES())
     }, [])
 
     useEffect(() => {
-        console.log(`user.dominos`, user.dominos)
-        console.log(`bank`, bank)
-        console.log(`oponent.dominos`, oponent.dominos)
+        // console.log(`user.dominos`, user.dominos)
+        // console.log(`bank`, bank)
+        // console.log(`oponent.dominos`, oponent.dominos)
         let b = bank
         let count = 0
         b.forEach((i, parent)=>{
@@ -78,16 +96,28 @@ console.log(`count`, count)
             selectedDomino.ref.current.className = styles.domino;
             let indexSpecial = specialLocations.find(item=>item.name === dropLocation.current.from)
 
-            // let location = dropLocation.current.to ?? dropLocation.current.from
+            let location = dropLocation.current.to ?? dropLocation.current.from
+            console.log(`location`, location)
             // let style = typeof location === "number" ? {top: location >= 13 ? "50%" : "0px", left: `calc((100% / 13) * ${location >= 13 ? location - 13 : location})`} : {}
-
+            let style = {
+                top:"0px",
+                left:"0px"
+            }
+            if([dropLocation.current.to, dropLocation.current.from].every(it => typeof it === "number")){
+                let index =  location >= 13 ? location - 13 : location
+                style = {
+                    top: location >= 13 ? `${dominosContainerRef.current.clientHeight/2}px` : "0px", 
+                    left: `${index * dominosContainerRef.current.clientWidth / 13}px`
+                }
+            }
             selectedDomino.styleSetter({
                 boxShadow: "0px 0px 0px 0px rgb(0 0 0 / 0%)",
                 transform: "scale(1)",
-                // ...style,
+                ...style
             })
             dispatch(DROP(dropLocation.current.from, dropLocation.current.to ?? dropLocation.current.from, selectedDomino, indexSpecial))
             dropLocation.current = {from: null, to: null}
+
             dispatch(UNSELECT_DOMINO())
         }
     }

@@ -28,37 +28,55 @@ export default function (state=initialState, action) {
     switch (action.type) {
         case "GET_DOMINOES":
             ///user dominos////////
-            let randomsUsers = []
-            while(randomsUsers.length < 14){
-                let index = Math.floor(Math.random() * (bank.length - 1));
-                randomsUsers.indexOf(index) === -1 && randomsUsers.push(index);
-            }
-            randomsUsers.forEach((item, i)=>{
-                let k = i+3 < 10 ? i+3 : i+9
+            let randoms = []
+        do{
+            let index = Math.floor(Math.random() * bank.length);
+            randoms.indexOf(index) === -1 && randoms.push(index);
+        }while(randoms.length < 28)
+        console.log(`randoms`, randoms)
+        randoms.forEach((item, i)=>{
+            let k = i+3 < 10 ? i+3 : i+9
+            if(i<14){
                 user.dominos.splice(k, 1, {...bank[item], i: k})
-            })
-            console.log(`randomUsers`, randomsUsers.map(item=>bank[item]))
-            randomsUsers.forEach(item=>{
-                bank.splice(item, 1);
-            })
-            /////////////////////
-            ///oponent dominos///
-            let randomsOponent = []
-            while(randomsOponent.length < 14){
-                let index = Math.floor(Math.random() * (bank.length - 1));
-                randomsOponent.indexOf(index) === -1 && randomsOponent.push(index);
-            }
-            randomsOponent.forEach((item, i)=>{
-                let k = i+3 < 10 ? i+3 : i+9
+            }else{
                 oponent.dominos.splice(k, 1, {...bank[item], i: k})
-            })
-            randomsOponent.forEach(item=>{
-                bank.splice(item, 1);
-            })
-            /////////////////////
-            ////////random domino from bank//////////
+            }
+        })
+        randoms.forEach(item=>{
+            bank.splice(item, 1);
+        })
 
-            let ind = Math.floor(Math.random() * (bank.length - 1))
+            // randomsUsers.forEach((item, i)=>{
+            //     let k = i+3 < 10 ? i+3 : i+9
+            //     user.dominos.splice(k, 1, {...bank[item], i: k})
+            // })
+            // console.log(`randomUsers`, randomsUsers)
+            // randomsUsers.forEach(item=>{
+            //     bank.splice(item, 1);
+            // })
+            // /////////////////////
+            // ///oponent dominos///
+            // let randomsOponent = []
+            // do{
+            //     let index = Math.floor(Math.random() * bank.length);
+            //     randomsOponent.indexOf(index) === -1 && randomsOponent.push(index);
+            // }while(randomsOponent.length < 14)
+            // randomsOponent.forEach((item, i)=>{
+            //     let k = i+3 < 10 ? i+3 : i+9
+            //     oponent.dominos.splice(k, 1, {...bank[item], i: k})
+            // })
+
+            // console.log(`randomsOponent`, randomsOponent)
+
+
+            // randomsOponent.forEach(item=>{
+            //     bank.splice(item, 1);
+            // })
+            // /////////////////////
+
+            // ////////random domino from bank//////////
+
+            let ind = Math.floor(Math.random() * bank.length)
             banksOpenedDomino = bank[ind]
             bank.splice(ind, 1)
 
@@ -97,7 +115,7 @@ export default function (state=initialState, action) {
             }
         case "DROP":
             const { fromIndex, toIndex, domino, indexSpecial } = action.payload
-            console.log(`action.payload`, action.payload)
+            // console.log(`action.payload`, action.payload)
             if((fromIndex===toIndex) || (typeof fromIndex !== "number" && typeof toIndex !== "number")){
                 return {...state}
             }else if(indexSpecial){
