@@ -10,7 +10,7 @@ export default function Game() {
     const game = useSelector(s => s.game)
     const { oponent, user, bank, banksOpenedDomino } = game
     const [oponentsDomino, setOponentsDomino] = useState(null)
-    const [userssDomino, setUserssDomino] = useState(null)
+    const userssDomino = useSelector(s=>s.usersDomino)
     const selectedDomino = useSelector(s => s.game.selectedDomino)
     const dropLocation = useRef({from: null, to: null})
     const dominosContainerRef = useRef()
@@ -19,24 +19,6 @@ export default function Game() {
     const specialLocations = useSelector(s=>s.game.specialLocations)
     const openedFromBankRef = useRef()
     const usersDominoRef = useRef()
-    const dominoStyle =  {
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#d0b888",
-        borderRadius: "10px",
-        userSelect: "none",
-        cursor: "pointer",
-    }
-    const selectedDominoStyle = {
-        backgroundColor: "#d0b888",
-        borderRadius: "10px",
-        userSelect: "none",
-        boxShadow: "0px 0px 10px 18px rgb(0 0 0 / 50%)",
-        transform: "scale(1.1)",
-        position: "absolute",
-        width: "calc(100% / 13)",
-        height: "50%",
-    }
 
     useEffect(() => {
         dispatch(GET_DOMINOES())
@@ -51,7 +33,7 @@ export default function Game() {
         b.forEach((i, parent)=>{
             let index = user.dominos.findIndex((k, slave)=>k&&i.id===k.id)
             if(index!==-1){
-                console.log(`b[index]`, b[index])
+                console.log(`user.dominos[index]`, user.dominos[index])
                 count ++ 
             }
         })
@@ -70,7 +52,7 @@ console.log(`count`, count)
         let filteredIds = ids.filter((item, i, arr) => { return !arr.some((e, j) => { if (i === j) { return false } return isSubArray(e, item) }) })
         let combinations = filteredIds.map(item => item.map(e => JSON.parse(e)))
         setCombinations(combinations.map(item => ({ start: Math.min(...item.map(e => e.i)), end: Math.max(...item.map(e => e.i) )})))
-    }, [user])
+    }, [user, bank])
 
     useEffect(() => {
         if (selectedDomino) {
@@ -108,6 +90,11 @@ console.log(`count`, count)
                 style = {
                     top: location >= 13 ? `${dominosContainerRef.current.clientHeight/2}px` : "0px", 
                     left: `${index * dominosContainerRef.current.clientWidth / 13}px`
+                }
+            }else if(!indexSpecial){
+                style = {
+                    top: location >= 13 ? `${dominosContainerRef.current.clientHeight/2}px` : "0px", 
+                    left: `${selectedDomino.i * dominosContainerRef.current.clientWidth / 13}px`
                 }
             }
             selectedDomino.styleSetter({
